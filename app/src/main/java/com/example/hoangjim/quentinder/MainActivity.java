@@ -1,5 +1,6 @@
 package com.example.hoangjim.quentinder;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -22,38 +23,30 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class MainActivity extends AppCompatActivity {
 
-	private final List<Person> _persons = new ArrayList<>();
-
 	private void loadPerson(Person person) {
+		if(person == null)
+			return;
+
 		final ImageView imgView = (ImageView) findViewById(R.id.userPic);
-		Picasso.with(MainActivity.this).load(person.picUrl).error(R.mipmap.ic_launcher).into(imgView);
+		Picasso.with(this).load(person.picUrl).error(R.mipmap.ic_launcher).into(imgView);
 
 		final TextView txtView = (TextView) findViewById(R.id.userNameAndAge);
-		txtView.setText(person.name + ", " + person.age + " ans");
-	}
-
-	private Person popNextPerson() {
-		Person person = _persons.get(0);
-		_persons.remove(0);
-		return person;
+		txtView.setText(person.firstName + ", " + person.age + " ans");
 	}
 
 	private void onLikeClicked() {
-		loadPerson(popNextPerson());
+		loadPerson(CurrentState.getInstance().popNextPerson());
 	}
 
 	private void onNopeClicked() {
-		loadPerson(popNextPerson());
+		loadPerson(CurrentState.getInstance().popNextPerson());
 	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		Log.d("Coucou", "onCreate");
+		Log.d("Coucou", "onCreate main");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
@@ -80,12 +73,7 @@ public class MainActivity extends AppCompatActivity {
 				return false;
 			}
 		});
-	}
 
-	@Override
-	public void onAttachedToWindow() {
-		Log.d("Coucou", "onAttachedToWindow");
-		super.onAttachedToWindow();
 		RequestQueue rq = Volley.newRequestQueue(this);
 		String url = "https://randomuser.me/api/?format=json&results=50&nat=fr";
 
@@ -113,20 +101,44 @@ public class MainActivity extends AppCompatActivity {
 		rq.add(stringRequest);
 	}
 
+	@Override
+	public void onAttachedToWindow() {
+		Log.d("Coucou", "onAttachedToWindow");
+		super.onAttachedToWindow();
+		loadPerson(CurrentState.getInstance().getCurrentPerson());
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		loadPerson(CurrentState.getInstance().getCurrentPerson());
+	}
+
 	private void receiveUserData(JSONObject response) throws JSONException {
 		JSONArray results = response.getJSONArray("results");
 		DateTime now = DateTime.now();
 		for (int i = 0; i < results.length(); ++i) {
 			JSONObject user = results.getJSONObject(i).getJSONObject("user");
-			String name = user.getJSONObject("name").getString("first");
-			name = String.format("%c%s", Character.toUpperCase(name.charAt(0)), name.substring(1));
-			_persons.add(new Person(
-					name,
+			JSONObject name = user.getJSONObject("name");
+			String firstName = name.getString("first");
+			String lastName = name.getString("last");
+			firstName = String.format("%c%s", Character.toUpperCase(firstName.charAt(0)), firstName.substring(1));
+			lastName = String.format("%c%s", Character.toUpperCase(lastName.charAt(0)), lastName.substring(1));
+			CurrentState.getInstance().addPerson(new Person(
+					firstName,
+					lastName,
+					user.getJSONObject("picture").getString("large"),
 					Years.yearsBetween(new DateTime(user.getLong("dob") * 1000l), now).getYears(),
-					user.getJSONObject("picture").getString("large")
+					user.getString("email"),
+					user.getJSONObject("location").getString("city")
 			));
 		}
 
-		loadPerson(popNextPerson());
+		loadPerson(CurrentState.getInstance().getCurrentPerson());
+	}
+
+	public void userImageClicked(View view) {
+		Intent intent = new Intent(this, DetailActivity.class);
+		startActivity(intent);
 	}
 }

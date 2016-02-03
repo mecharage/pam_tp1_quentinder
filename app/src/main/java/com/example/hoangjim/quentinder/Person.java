@@ -1,24 +1,27 @@
 package com.example.hoangjim.quentinder;
 
-import org.joda.time.DateTime;
-import org.joda.time.Days;
-import org.joda.time.Years;
-
 public class Person {
-	public final String name;
+	public final String firstName;
+	public final String lastName;
 	public final int age;
 	public final String picUrl;
+	public final String email;
+	public final String location;
 
-	Person(String name, int age, String picUrl) {
-		this.name = name;
+	Person(String firstName, String lastName, String picUrl, int age, String email, String location) {
+		this.firstName = firstName;
 		this.age = age;
 		this.picUrl = picUrl;
+		this.lastName = lastName;
+		this.email = email;
+		this.location = location;
+
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(name).append(" ").append(age).append(" ans");
+		sb.append(firstName).append(" ").append(age).append(" ans");
 		return sb.toString();
 	}
 }
