@@ -14,12 +14,12 @@ import com.squareup.picasso.Picasso;
 public class DetailActivity extends AppCompatActivity {
 
 	private void onLikeClicked() {
-		CurrentState.getInstance().popNextPerson();
+		CurrentState.getInstance().decideLike();
 		finish();
 	}
 
 	private void onNopeClicked() {
-		CurrentState.getInstance().popNextPerson();
+		CurrentState.getInstance().decideNope();
 		finish();
 	}
 
