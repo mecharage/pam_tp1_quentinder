@@ -1,9 +1,9 @@
 package com.example.hoangjim.quentinder;
 
 
+
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -30,35 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+
     CardsDataAdapter cardAdapter;
-
-    public void onLikeClicked() {
-        ((CardStack) findViewById(R.id.container)).discardTop(1);
-    }
-
-    public void onNopeClicked() {
-        ((CardStack) findViewById(R.id.container)).discardTop(0);
-    }
-
-    public boolean onOptionItemsSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_refresh:
-                Button b = (Button) findViewById(R.id.action_refresh);
-                b.setOnTouchListener(new View.OnTouchListener() {
-                    @Override
-                    public boolean onTouch(View v, MotionEvent event) {
-                        if (event.getAction() == MotionEvent.ACTION_UP) {
-                            onLikeClicked();
-                            return true;
-                        }
-                        return false;
-                    }
-                });
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -96,35 +69,7 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
-        RequestQueue rq = Volley.newRequestQueue(this);
-        String url = "https://randomuser.me/api/?format=json&results=50&nat=fr";
-        JsonObjectRequest stringRequest = new JsonObjectRequest(
-                url,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        //Log.i("Volley", response.toString());
-                        try {
-                            List<Person> list = receiveUserData(response);
-                            cardAdapter = new CardsDataAdapter(getApplicationContext(), 0, list);
-                            CardStack mCardStack = (CardStack) findViewById(R.id.container);
-                            mCardStack.setContentResource(R.layout.card_layout);
-                            //cardAdapter.addAll(CurrentState.getInstance().getPersons());
-                            mCardStack.setAdapter(cardAdapter);
-                            mCardStack.setStackMargin(20);
-                        } catch (JSONException e) {
-                            Log.e("Volley", Log.getStackTraceString(e));
-                        }
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e("Volley", error.getMessage());
-                    }
-                }
-        );
-        rq.add(stringRequest);
+        personsGenerator();
     }
 
     @Override
@@ -171,10 +116,63 @@ public class MainActivity extends AppCompatActivity {
         return list;
     }
 
+    public void personsGenerator (){
+        RequestQueue rq = Volley.newRequestQueue(this);
+        String url = "https://randomuser.me/api/?format=json&results=50&nat=fr";
+        JsonObjectRequest stringRequest = new JsonObjectRequest(
+                url,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        //Log.i("Volley", response.toString());
+                        try {
+                            List<Person> list = receiveUserData(response);
+                            cardAdapter = new CardsDataAdapter(getApplicationContext(), 0, list);
+                            CardStack mCardStack = (CardStack) findViewById(R.id.container);
+                            mCardStack.setContentResource(R.layout.card_layout);
+                            //cardAdapter.addAll(CurrentState.getInstance().getPersons());
+                            mCardStack.setAdapter(cardAdapter);
+                            mCardStack.setStackMargin(20);
+                            mCardStack.reset(true);
+                        } catch (JSONException e) {
+                            Log.e("Volley", Log.getStackTraceString(e));
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("Volley", error.getMessage());
+                    }
+                }
+        );
+        rq.add(stringRequest);
+    }
+
     public void userImageClicked(View view) {
         CardStack mCardStack = (CardStack) findViewById(R.id.container);
         CurrentState.getInstance().setCurrentPerson(cardAdapter.getItem(mCardStack.getCurrIndex()));
         Intent intent = new Intent(this, DetailActivity.class);
         startActivity(intent);
     }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_refresh:
+                personsGenerator();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    public void onLikeClicked() {
+        ((CardStack) findViewById(R.id.container)).discardTop(1);
+    }
+
+    public void onNopeClicked() {
+        ((CardStack) findViewById(R.id.container)).discardTop(0);
+    }
+
 }
+
